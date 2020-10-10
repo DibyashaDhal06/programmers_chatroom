@@ -1,0 +1,69 @@
+{% extends "base.jinja2" %}
+{% block content %}
+<div class ="container py-5">
+    <div class="card mb-3 shadow bg-white rounded" style=" margin: 0 auto;margin-top:40px;
+        width: 20rem;">
+      <div class="card-body">
+         <center><h5 class="card-title" style="font: Medium 40px/49px Helvetica Neue;letter-spacing: 0px;color: #3D86C6;">
+       <a href="{{url_for('login')}}"><b>Sign In</b></a> &nbsp;|&nbsp; <a href="{{url_for('signup')}}">Sign Up</a></h5></center><br>
+      <form class="log-in px-3" action="{{url_for('signup')}}" method="POST">
+
+		{{ form.csrf_token }}
+       <div class="form-group ">
+                {% if form.user_id.errors %}
+                {{form.user_id(class="form-control is-invalid")}}
+                <div class="invalid-feedback">
+                {% for error in form.user_id.errors %}
+                    <span>{{error}}</span>
+                {% endfor %}
+                </div>
+                {% else %}
+                {{form.user_id(class="form-control")}}
+                {% endif %}
+            </div>
+
+             <div class="form-group">
+                {% if form.name.errors %}
+                {{form.name(class="form-control is-invalid")}}
+                <div class="invalid-feedback">
+                {% for error in form.name.errors %}
+                    <span>{{error}}</span>
+                {% endfor %}
+                </div>
+                {% else %}
+
+                {{form.name(class="form-control")}}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {% if form.password.errors %}
+                {{form.password(class="form-control is-invalid")}}
+                <div class="invalid-feedback">
+                {% for error in form.password.errors %}
+                    <span>{{error}}</span>
+                {% endfor %}
+                </div>
+                {% else %}
+                <div>
+                {{form.password(class="form-control")}}
+				</div>
+                {% endif %}
+            </div>
+        </div>
+		  {% if error %}
+		  <span class="" style="color:red">{{error}}</span><br>
+		  {%else%}
+		  {%endif%}
+
+    <br> <input class="btn btn-lg btn-info btn-block" type="submit" value="Sign Up"  style = "background: transparent linear-gradient(279deg, #862782 0%, #184391 1%, #51A4DA 100%) 0% 0% no-repeat padding-box;
+border-radius: 38px;
+opacity: 1;"></input>
+            </form>
+
+
+
+      </div>
+</div>
+
+{% endblock content %}

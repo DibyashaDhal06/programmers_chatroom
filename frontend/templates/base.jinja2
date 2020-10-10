@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Programmer's Chatroom</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="theme-color" content="white">
+		<meta name="description" content="Workbench for TCS">
+
+		<link rel="shortcut icon" href="{{url_for('static', filename='images/tata192.png')}}" type="image/x-icon" />
+		<link href="https://fonts.googleapis.com/css?family=Nunito:300,400,700" rel="stylesheet">
+		<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+		<script src="/main"></script>
+		<style>
+			body{
+				background:rgba(50, 60, 80, 1);
+				color : white;
+			}
+			.bg-dark-custom{
+				background:rgba(20, 50, 80, 1);
+				color : white;
+			}
+			.nav-link.active{
+				background: rgba(70, 90, 120, 1) !important;
+				border : 0pt solid black;
+				color: white !important;
+			}
+			.card{
+				margin : 1em;
+			}
+		</style>
+		{% if current_user.is_authenticated %}
+			<script>
+				var refreshTask = null;
+				let recorded_timestamp = '';
+				function request(method, url, is_async, body){
+					let csrf_token = "{{ csrf_token() }}";
+					var xhr = new XMLHttpRequest();
+					return new Promise(function(resolve, reject){
+						xhr.onreadystatechange = function(){
+							if(xhr.readyState == 4){
+								if(xhr.status >= 300){
+									reject(xhr.status);
+								}
+								else{
+									resolve(xhr.response);
+								}
+							}
+						};
+						xhr.open(method, url, is_async);
+						xhr.setRequestHeader('X-CSRFToken', csrf_token);
+						if(method == 'POST') xhr.send(body);
+						else xhr.send();
+					});
+				}
+				function create_recieved(user, message, timestamp){
+					const card = document.createElement('div');
+					card.classList.add('card', 'bg-dark', 'w-50');
+					const card_header = document.createElement('div');
+					card_header.classList.add('card-header');
+					card_header.innerHTML = user;
+					const card_body = document.createElement('div');
+					card_body.classList.add('card-body');
+					card_body.innerHTML = message;
+					const card_footer = document.createElement('div');
+					card_footer.classList.add('card-footer', 'text-right', 'small');
+					card_footer.innerHTML = timestamp;
+					card.appendChild(card_header);
+					card.appendChild(card_body);
+					card.appendChild(card_footer);
+					return card;
+				}
+				function create_sent(user, message, timestamp){
+					const card = create_recieved(user, message, timestamp);
+					card.classList.add('float-right');
+					return card;
+				}
+				function check(){
+					request('POST', '/fetch', true, null).then((success) => {
+						const messages = JSON.parse(success);
+						if(messages.length > 0){
+							if(messages[messages.length - 1].timestamp != recorded_timestamp){
+								recorded_timestamp = messages[messages.length - 1].timestamp;
+								document.getElementById('content').innerHTML = '';
+								for(var i=0;i<messages.length;i++){
+									let element = null;
+									console.log(messages[i]);
+									if(messages[i].user_id == "{{ current_user.user_id }}"){
+										element = create_sent(messages[i].user_id, messages[i].message, messages[i].timestamp);
+									}
+									else element = create_received(messages[i].user_id, messages[i].message, messages[i].timestamp);
+									document.getElementById('content').appendChild(element);
+								}
+							}
+						}
+					}, (error) => {
+						console.log('No new');
+					});
+				}
+				function send(){
+					const  message = document.getElementById('message').value;
+					if(message.length <= 0){
+						alert("There is no content to send.");
+						return;
+					}
+					let form = new FormData();
+					form.append('message', message);
+					request('POST', '/send', true, form).then((success) => {
+						console.log('Recieved by server.');
+						check();
+					}, (error) => {console.error('Sending failed',error);});
+				}
+				function init(){refreshTask = setInterval(check, 3000);}
+				function stop(){clearInterval(refreshTask);}
+			</script>
+		{% endif %}
+	</head>
+	<body onload = "init()"">
+		<div class="container-fluid py-5" id="content" style="margin-top:60px;">
+			{%block content%}
+			<div class="card bg-dark w-50">
+				<div class="card-header">
+					User ID
+				</div>
+				<div class="card-body">
+					Chat message
+				</div>
+			</div>
+			<div class="card bg-dark w-50 float-right">
+				<div class="card-header">
+					User ID
+				</div>
+				<div class="card-body">
+					Chat message
+				</div>
+			</div>
+			{%endblock%}
+		</div>
+		<!-- 'overlay' segment is managed through the environment. Do not load anything on it.-->
+		<div class="container-fluid position-fixed fixed-top h-100 w-100 py-5 my-5" id="overlay" hidden>
+		</div>
+		<footer class="footer text-center w-100 fixed-bottom py-0" style="background:linear-gradient(rgba(50, 60, 80, 0), rgba(50, 60, 80, 1));" id="footer">
+			<div class="row justify-content-center py-2 shadow">
+				<input type="text" class="form-control" placeholder="Enter text message here" style="display:block;width:50vw;" id="message"/><button class="btn btn-primary" onclick="send()">Send</button>
+			</div>
+		</footer>
+		<div class="fixed-top shadow" id="nav" style="background:linear-gradient(rgba(50, 60, 80, 1), rgba(50, 60, 80, 1) , rgba(50, 60, 80, 0.8), rgba(50, 60, 80, 0))">
+			<nav class="navbar navbar-expand-lg navbar-dark" id="header"><!-- rgba(44, 84, 156, 1); -->
+				<a class="navbar-brand">
+					<div class="d-inline-block h4" style="color:rgba(250, 250, 250, 1);">Programmer's Chatroom</div>
+				</a>
+				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+				aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+				<div class="collapse navbar-collapse" id="navbarNav" data-hover="dropdown">
+					<ul class="nav navbar-nav ml-auto">
+						{%if not current_user.is_authenticated%}
+						<li class="nav-item">
+							Signed in as {{ current_user.user_id }}
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="{{url_for('logout')}}"  style="display:none;">Log Out</a>
+						</li>
+
+						{%endif%}
+					</ul>
+				</div>
+			</nav>
+			<div class="nav nav-tabs px-2" id="tabs" style="border:none;"></div>
+		</div>
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	</body>
+</html>
