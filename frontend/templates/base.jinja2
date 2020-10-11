@@ -29,6 +29,23 @@
 			}
 			.card{
 				margin : 1em;
+				margin-right : 25%;
+				min-width : 25%;
+				max-width:  : 75%;
+			}
+			.card.float-right{
+				margin-right : 0%;
+				margin-left : 25%;
+			}
+			.card-header{
+				padding:3pt;
+				padding-left : 10pt;
+			}
+			.card-footer{
+				padding:3pt;
+				padding-right : 10pt;
+				background : rgba(0,0,0,0);
+				border : none;
 			}
 		</style>
 		{% if current_user.is_authenticated %}
@@ -57,7 +74,7 @@
 				}
 				function create_received(user, message, timestamp){
 					const card = document.createElement('div');
-					card.classList.add('card', 'bg-dark', 'w-75');
+					card.classList.add('card', 'bg-dark', 'mw-75');
 					const card_header = document.createElement('div');
 					card_header.classList.add('card-header');
 					card_header.innerHTML = user;
