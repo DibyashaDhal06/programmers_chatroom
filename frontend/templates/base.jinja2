@@ -55,7 +55,7 @@
 						else xhr.send();
 					});
 				}
-				function create_recieved(user, message, timestamp){
+				function create_received(user, message, timestamp){
 					const card = document.createElement('div');
 					card.classList.add('card', 'bg-dark', 'w-50');
 					const card_header = document.createElement('div');
@@ -73,13 +73,14 @@
 					return card;
 				}
 				function create_sent(user, message, timestamp){
-					const card = create_recieved(user, message, timestamp);
+					const card = create_received(user, message, timestamp);
 					card.classList.add('float-right');
 					return card;
 				}
 				function check(){
 					request('POST', '/fetch', true, null).then((success) => {
 						const messages = JSON.parse(success);
+						console.log(messages);
 						if(messages.length > 0){
 							if(messages[messages.length - 1].timestamp != recorded_timestamp){
 								for(var i=0;i<messages.length;i++){
