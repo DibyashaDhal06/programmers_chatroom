@@ -125,9 +125,9 @@ def send_message():
 @application.route('/fetch', methods=['POST'])
 @login_required
 def fetch():
-	query = 'SELECT * FROM (SELECT * FROM chat_message ORDER BY timestamp DESC LIMIT 50) ORDER BY timestamp ASC;'
+	query = 'SELECT * FROM chat_message ORDER BY timestamp ASC;'
 	users = pandas.read_sql(query, orm.get_engine(application).connect())
-	json_str = users.to_json(orient='records')
+	json_str = users.tail(50).to_json(orient='records')
 	response = make_response(json_str)
 	response.mimetype = 'text/json'
 	return response
