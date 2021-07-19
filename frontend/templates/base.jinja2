@@ -52,25 +52,19 @@
 			<script>
 				var refreshTask = null;
 				let recorded_timestamp = '';
-				function request(method, url, is_async, body){
-					let csrf_token = "{{ csrf_token() }}";
-					var xhr = new XMLHttpRequest();
-					return new Promise(function(resolve, reject){
-						xhr.onreadystatechange = function(){
-							if(xhr.readyState == 4){
-								if(xhr.status >= 300){
-									reject(xhr.status);
-								}
-								else{
-									resolve(xhr.response);
-								}
-							}
-						};
-						xhr.open(method, url, is_async);
-						xhr.setRequestHeader('X-CSRFToken', csrf_token);
-						if(method == 'POST') xhr.send(body);
-						else xhr.send();
-					});
+		               function request(url,body) {
+                	       return new Promise(function(resolve, reject) {
+        				var socket = new WebSocket('ws://localhost:8000'+url);
+       			    	        socket.onopen = function() {
+			        	console.log("Connection opened");
+                    	                resolve(socket);
+                		        };
+                   		        socket.onerror = function(err) {
+				        console.error("WebSocket error occurred");
+            			        reject(err);
+        				};
+        				socket.send(body);
+    				     });
 				}
 				function create_received(user, message, timestamp){
 					const card = document.createElement('div');
@@ -95,7 +89,7 @@
 					return card;
 				}
 				function check(){
-					request('POST', '/fetch', true, null).then((success) => {
+					request('/fetch',null).then((success) => {
 						const messages = JSON.parse(success);
 						if(messages.length > 0){
 							if(messages[messages.length - 1].timestamp != recorded_timestamp){
@@ -126,9 +120,15 @@
 					}
 					let form = new FormData();
 					form.append('message', message);
-					request('POST', '/send', true, form).then((success) => {
+					request('/send',form).then(() => {
 						console.log('Recieved by server.');
+						socket.onmessage = (event) => {
+                        console.log(event.data);
 						check();
+						};
+						socket.onclose = () => {
+                        console.log("Connection Closed");
+                        };
 					}, (error) => {console.error('Sending failed',error);});
 				}
 				function init(){
